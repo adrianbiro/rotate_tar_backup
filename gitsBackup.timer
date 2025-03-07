@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup /srv/gits on hourly basis 
+Requires=gitsBackup.service
+
+[Timer]
+Unit=gitsBackup.service
+OnCalendar=*-*-* *:00:00
+
+[Install]
+WantedBy=timers.target

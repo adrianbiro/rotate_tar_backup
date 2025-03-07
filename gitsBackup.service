@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup of /srv/gits
+Wants=gitsBackup.timer
+
+[Service]
+Type=oneshot
+ExecStart=/srv/gits/git_server_administration/backup_script/backup.sh
+
+[Install]
+WantedBy=multi-user.target
