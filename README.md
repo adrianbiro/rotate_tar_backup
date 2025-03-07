@@ -14,3 +14,5 @@ sudo systemctl enable --now gitsBackup.service
 sudo systemctl enable --now gitsBackup.timer
 systemctl status gitsBackup
 ```
+
+Inspiration from forked gist <https://gist.github.com/adrianbiro/22fa0362fe1a510eb00fe11dced759d4>
