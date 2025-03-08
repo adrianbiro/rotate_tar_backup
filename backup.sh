@@ -14,10 +14,12 @@ DAYYEAR="$(date +%j)"
 DAYMONTH="$(date +%d)"
 DAYWEEK="$(date +%u)"
 
-[[ ($DAYYEAR -eq 1) ]] && RATE='yearly'
-[[ ($DAYMONTH -eq 1) && (-z $RATE) ]] && RATE='monthly'
-[[ ($DAYWEEK -eq 7) && (-z $RATE) ]] && RATE='weekly'
-[[ ($DAYWEEK -lt 7) && (-z $RATE) ]] && RATE='daily'
+# force base-10 interpretation by 10#$variable, since $date +%d will return zero padded number
+[[ (10#$DAYYEAR -eq 1) ]] && RATE='yearly'
+[[ (10#$DAYMONTH -eq 1) && (-z $RATE) ]] && RATE='monthly'
+[[ (10#$DAYWEEK -eq 7) && (-z $RATE) ]] && RATE='weekly'
+[[ (10#$DAYWEEK -lt 7) && (-z $RATE) ]] && RATE='daily'
+
 
 DATE=$RATE-"$(date +"%Y:%m:%d")"
 : <<'END_COMMENT'
