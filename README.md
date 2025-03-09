@@ -12,7 +12,7 @@ Rotate tar backup: daily, weekly, monthly, yearly, and hourly.
 
 ### Script configuration
 
-Change cpnfiguration variables in script
+Change configuration variables in bash version script or `config.json` for python version.
 
 ```bash
 SRC_DIR="/srv/gits"
@@ -56,7 +56,7 @@ gits-daily-2025:03:05.tar.gz
 gits-daily-2025:03:04.tar.gz
 gits-daily-2025:03:03.tar.gz
 gits-weekly-2025:03:02.tar.gz # doubes as daily
-gits-daily-2025:03:01.tar.gz  # in ocasion weekly doubles as daily, you have temporarrly +1 daily retention period
+gits-daily-2025:03:01.tar.gz  # in ocasion weekly doubles as daily, so you have temporarrly +1 daily retention period
 gits-weekly-2025:02:23.tar.gz
 gits-weekly-2025:02:16.tar.gz
 gits-monthly-2025:03:01.tar.gz

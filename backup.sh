@@ -33,7 +33,7 @@ Example $BACKUP_DIR structure:
     gits-daily-2025:03:04.tar.gz
     gits-daily-2025:03:03.tar.gz
     gits-weekly-2025:03:02.tar.gz # doubes as daily
-    gits-daily-2025:03:01.tar.gz  # in ocasion weekly doubles as daily, you have temporarrly +1  daily retention period
+    gits-daily-2025:03:01.tar.gz  # in ocasion weekly doubles as daily, so you have temporarrly +1 daily retention period
     gits-weekly-2025:02:23.tar.gz
     gits-weekly-2025:02:16.tar.gz
     gits-monthly-2025:03:01.tar.gz
@@ -57,7 +57,7 @@ Skip tar creation and compresion if eg. daily backup was created in less then 6 
 Just cp previous one, to avoid unnecesery load.
 END_COMMENT
     [[ ($BACKUP_RETENTION_HOURLY -gt 0) ]] && {
-        BKP_FILE_hourly="${BACKUP_DIR}/${PROJECT_NAME}-hourly-$(date +"%Y:%m:%d-%X").tr.gz"
+        BKP_FILE_hourly="${BACKUP_DIR}/${PROJECT_NAME}-hourly-$(date +"%Y:%m:%d-%X").tar.gz"
         echo -e "Creating:\t${BKP_FILE_hourly}"
         [[ $(($(date +'%s') - $(stat -c '%W' ${BKP_FILE}))) -lt 360 ]] && cp "${BKP_FILE}" "${BKP_FILE_hourly}"
         [[ -f "${BKP_FILE_hourly}" ]] || tar czf "${BKP_FILE_hourly}" "${SRC_DIR}"
