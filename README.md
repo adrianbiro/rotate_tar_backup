@@ -2,6 +2,8 @@
 
 Rotate tar backup: daily, weekly, monthly, yearly, and hourly.
 
+It is for unix like systems with tar installed.
+
 ## Systemd links
 
 * <https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html#>
