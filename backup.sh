@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=CS2010
-SRC_DIR="/srv/gits"
-BACKUP_DIR="/srv/backups"
+SRC_DIR="gits"
+BACKUP_DIR="backups"
 PROJECT_NAME="gits"
 
 BACKUP_RETENTION_HOURLY=12
@@ -15,11 +15,10 @@ DAYMONTH="$(date +%d)"
 DAYWEEK="$(date +%u)"
 
 # force base-10 interpretation by 10#$variable, since $date +%d will return zero padded number
-[[ (10#$DAYYEAR -eq 1) ]] && RATE='yearly'
-[[ (10#$DAYMONTH -eq 1) && (-z $RATE) ]] && RATE='monthly'
-[[ (10#$DAYWEEK -eq 7) && (-z $RATE) ]] && RATE='weekly'
+[[ (10#$DAYYEAR -eq 1) && ($BACKUP_RETENTION_YEARLY -gt 0) ]] && RATE='yearly'
+[[ (10#$DAYMONTH -eq 1) && (-z $RATE) && ($BACKUP_RETENTION_MONTHLY -gt 0) ]] && RATE='monthly'
+[[ (10#$DAYWEEK -eq 7) && (-z $RATE) && ($BACKUP_RETENTION_WEEKLY -gt 0) ]] && RATE='weekly'
 [[ (10#$DAYWEEK -lt 7) && (-z $RATE) ]] && RATE='daily'
-
 
 DATE=$RATE-"$(date +"%Y:%m:%d")"
 : <<'END_COMMENT'
@@ -59,21 +58,22 @@ END_COMMENT
     [[ ($BACKUP_RETENTION_HOURLY -gt 0) ]] && {
         BKP_FILE_hourly="${BACKUP_DIR}/${PROJECT_NAME}-hourly-$(date +"%Y:%m:%d-%X").tar.gz"
         echo -e "Creating:\t${BKP_FILE_hourly}"
-        [[ $(($(date +'%s') - $(stat -c '%W' ${BKP_FILE}))) -lt 360 ]] && cp "${BKP_FILE}" "${BKP_FILE_hourly}"
+        [[ $(("$(date +'%s')" - "$(stat -c '%W' ${BKP_FILE})")) -lt 360 ]] && cp "${BKP_FILE}" "${BKP_FILE_hourly}"
         [[ -f "${BKP_FILE_hourly}" ]] || tar czf "${BKP_FILE_hourly}" "${SRC_DIR}"
     }
 }
 
 function rotate_backups() {
-    cd "${BACKUP_DIR}" || echo "${BACKUP_DIR}: does not exists"
+    cd "${BACKUP_DIR}" || {
+        echo "${BACKUP_DIR}: does not exists"
+        exit 1
+    }
     echo "Rotating old backups"
     ls -t | grep "${PROJECT_NAME}" | grep "hourly" | sed -e 1,"$BACKUP_RETENTION_HOURLY"d | xargs -d '\n' rm -vR 2>/dev/null
     ls -t | grep "${PROJECT_NAME}" | grep "daily" | sed -e 1,"$BACKUP_RETENTION_DAILY"d | xargs -d '\n' rm -vR 2>/dev/null
     ls -t | grep "${PROJECT_NAME}" | grep "weekly" | sed -e 1,"$BACKUP_RETENTION_WEEKLY"d | xargs -d '\n' rm -vR 2>/dev/null
     ls -t | grep "${PROJECT_NAME}" | grep "monthly" | sed -e 1,"$BACKUP_RETENTION_MONTHLY"d | xargs -d '\n' rm -vR 2>/dev/null
-    if [[ ($BACKUP_RETENTION_YEARLY -gt 0) ]]; then
-        ls -t | grep "${PROJECT_NAME}" | grep yearly | sed -e 1,"$BACKUP_RETENTION_YEARLY"d | xargs -d '\n' rm -vR 2>/dev/null
-    fi
+    ls -t | grep "${PROJECT_NAME}" | grep yearly | sed -e 1,"$BACKUP_RETENTION_YEARLY"d | xargs -d '\n' rm -vR 2>/dev/null
 }
 
 backup

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-""" 
-"""
+""" """
 import json
 import subprocess
 import sys
@@ -19,15 +18,18 @@ class Config:
     BACKUP_RETENTION_WEEKLY: int
     BACKUP_RETENTION_MONTHLY: int
     BACKUP_RETENTION_YEARLY: int
-
+ 
+    
     @property
     def _rate(self) -> str:
-        if datetime.now().timetuple().tm_yday == 1:
+        # fmt: off
+        if datetime.now().timetuple().tm_yday == 1 and self.BACKUP_RETENTION_YEARLY > 0:
             return "yearly"
-        if datetime.now().timetuple().tm_mday == 1:
+        if datetime.now().timetuple().tm_mday == 1 and self.BACKUP_RETENTION_MONTHLY > 0:
             return "monthly"
-        if (datetime.now().timetuple().tm_wday + 1) == 7:
+        if (datetime.now().timetuple().tm_wday + 1) == 7 and self.BACKUP_RETENTION_WEEKLY > 0:
             return "weekly"
+        # fmt: on
         return "daily"  # less then 7
 
     def bkp_file(self, rate: str | None = None, hours: bool = False) -> str:
@@ -41,10 +43,11 @@ class Config:
 
 class Backup:
     """ """
+
     def __init__(self, config_file: str):
         try:
             with open(config_file, "r", encoding="utf-8") as f:
-                self.config = Config(**json.load(f))
+                self.config: Config = Config(**json.load(f))
         except FileNotFoundError as e:
             print(e)
             sys.exit(1)
@@ -57,28 +60,27 @@ class Backup:
         Skip tar creation and compresion if eg. daily backup was created in less then 6 minutes (360 sec).
         Just cp previous one, to avoid unnecesery load.
         """
-
-        def _tar(bkp_file: str) -> None:
-            subprocess.call(["tar", "cvf", bkp_file, self.config.SRC_DIR])
+        print("Creating:")
+        def _backup(bkp_file: str) -> None:
+            subprocess.call(["tar", "czf", bkp_file, self.config.SRC_DIR])
 
         if not Path(self.config.bkp_file()).exists():
-            print(f"Creating:\t{self.config.bkp_file}")
-            _tar(self.config.bkp_file())
+            print(f"\t{self.config.bkp_file}")
+            _backup(self.config.bkp_file())
         if self.config.BACKUP_RETENTION_HOURLY > 0:
             _bkp_file_hourly = self.config.bkp_file(hours=True, rate="hourly")
-            print(f"Creating:\t{_bkp_file_hourly}")
-            if (
-                datetime.now().timestamp()
-                - Path(self.config.bkp_file()).stat().st_ctime
-            ) < 360:
+            print(f"\t{_bkp_file_hourly}")
+            # fmt: off
+            if (datetime.now().timestamp() - Path(self.config.bkp_file()).stat().st_ctime) < 360:
+                # fmt: on
                 _src = Path(self.config.bkp_file())
                 _dest = Path(_bkp_file_hourly)
                 _dest.write_bytes(_src.read_bytes())
             if not Path(_bkp_file_hourly).exists():
-                _tar(_bkp_file_hourly)
+                _backup(_bkp_file_hourly)
 
     def rotate_backups(self):
-        print("Rotating old backups:")
+        print("Rotating (deleting) old backups:")
         old_backups: list[Path] = []
         for rate in ("hourly", "daily", "weekly", "monthly"):
             _all: list[Path] = [
@@ -89,11 +91,11 @@ class Backup:
                 if bkp.match(f"*{rate}*")
             ]
             _all.sort(key=lambda x: x.stat().st_ctime, reverse=True)
-            _retention: int = getattr(self.config, f"BACKUP_RETENTION_{rate.upper()}") 
+            _retention: int = getattr(self.config, f"BACKUP_RETENTION_{rate.upper()}")
             old_backups.extend(_all[_retention:])
 
         for ob in old_backups:
-            print(f"Deleting:\t{str(ob)}")
+            print(f"\t{str(ob)}")
             ob.unlink()
 
 
