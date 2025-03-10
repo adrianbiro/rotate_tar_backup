@@ -38,8 +38,8 @@ mkdir -p /srv/{gits,backups}
 ### Systemd
 
 ```bash
-
 systemd-analyze verify gitsBackup.*
+systemd-run --user --wait ./backup.sh
 sudo systemctl edit --force --full  gitsBackup.timer
 sudo systemctl edit --force --full  gitsBackup.service
 sudo systemctl daemon-reload 
