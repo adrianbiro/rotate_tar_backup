@@ -1,15 +1,16 @@
 ---
 - name: git server setup and administation
   hosts: git
+  become: true 
   vars:
     gits_location: /srv/gits
     backups_location: /srv/backups
     git_user: git
     git_group: git
 
+
   tasks:
   - name: Install a required packages
-    become: true
     tags:
       - setup
     ansible.builtin.apt:
@@ -22,7 +23,6 @@
   - name: Create user
     tags: 
       - setup
-    become: yes
     user:
       name: git
       shell: /usr/bin/git-shell
@@ -31,7 +31,6 @@
     tags:
       - ssh
       - setup
-    become: true
     ansible.builtin.copy:
       src: ./home_git_ssh/authorized_keys
       dest: /home/git/.ssh/authorized_keys
@@ -41,7 +40,6 @@
   - name: Create directories for git server
     tags: 
       - setup 
-    become: true
     file:
       path: "{{ item }}"
       state: directory
@@ -51,6 +49,15 @@
     loop:
       - "{{ gits_location }}"
       - "{{ backups_location }}"
+  - name: Setup backup o gits
+    tags:
+      - setup
+      - setup_backup
+    command: echo Enable backup
+    notify:
+      - clone backup repo 
+      - install timer and service
+      - enable timer and service
   - name: Init git repo
     tags: init_git
     command: echo "task will fail without action"
@@ -61,7 +68,6 @@
 #### Handlers
   handlers:
     - name: create git repo dir
-      become: true
       file:
         path: "{{ gits_location }}/{{ repo_name }}"
         state: directory
@@ -69,10 +75,8 @@
         group: git
         mode: 0775
     - name: init bare git repo
-      become: true
       command: git init --bare "{{ gits_location }}/{{ repo_name }}"
     - name: fix git repo ownership
-      become: true
       file:
        dest: "{{ gits_location }}/{{ repo_name }}"
        owner: "{{ git_user}}"
@@ -84,7 +88,26 @@
         name: fail2ban
         state: started
         enabled: yes
-
-
+    - name: clone backup repo
+      ansible.builtin.git:
+        repo: https://github.com/adrianbiro/rotate_tar_backup.git
+        dest: "{{ gits_location }}/rotate_tar_backup"
+    - name: install timer and service
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "/etc/systemd/system/"
+        owner: root
+        group: root
+        remote_src: yes
+      with_fileglob:
+        - "{{ gits_location }}/rotate_tar_backup/gitsBackup.*"
+    - name: enable timer and service
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - gitsBackup.service
+        - gitsBackup.timer
 
 
