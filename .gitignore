@@ -1,2 +1,4 @@
 gits/
 backups/
+hosts
+ansible/home_git_ssh/authorized_keys

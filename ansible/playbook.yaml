@@ -1,0 +1,90 @@
+---
+- name: git server setup and administation
+  hosts: git
+  vars:
+    gits_location: /srv/gits
+    backups_location: /srv/backups
+    git_user: git
+    git_group: git
+
+  tasks:
+  - name: Install a required packages
+    become: true
+    tags:
+      - setup
+    ansible.builtin.apt:
+      pkg:
+        - git
+        - fail2ban
+      state: present
+    notify:
+      - start fail2ban
+  - name: Create user
+    tags: 
+      - setup
+    become: yes
+    user:
+      name: git
+      shell: /usr/bin/git-shell
+      home: /home/git
+  - name: Upload ssh key
+    tags:
+      - ssh
+      - setup
+    become: true
+    ansible.builtin.copy:
+      src: ./home_git_ssh/authorized_keys
+      dest: /home/git/.ssh/authorized_keys
+      owner: git
+      group: git
+      mode: 0644
+  - name: Create directories for git server
+    tags: 
+      - setup 
+    become: true
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: "{{ git_user}}"
+      group: "{{ git_group }}"
+      mode: 0775
+    loop:
+      - "{{ gits_location }}"
+      - "{{ backups_location }}"
+  - name: Init git repo
+    tags: init_git
+    command: echo "task will fail without action"
+    notify:
+      - create git repo dir
+      - init bare git repo
+      - fix git repo ownership
+#### Handlers
+  handlers:
+    - name: create git repo dir
+      become: true
+      file:
+        path: "{{ gits_location }}/{{ repo_name }}"
+        state: directory
+        owner: git
+        group: git
+        mode: 0775
+    - name: init bare git repo
+      become: true
+      command: git init --bare "{{ gits_location }}/{{ repo_name }}"
+    - name: fix git repo ownership
+      become: true
+      file:
+       dest: "{{ gits_location }}/{{ repo_name }}"
+       owner: "{{ git_user}}"
+       group: "{{ git_group }}"
+       #mode: 0775
+       recurse: true
+    - name: start fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+
+
+
