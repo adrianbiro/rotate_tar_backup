@@ -26,14 +26,14 @@
     ansible.builtin.apt:
       upgrade: dist
       cache_valid_time: 3600
-  - name: Reboot server
-    tags:
-    - maintenance
-    become: true
-    ansible.builtin.reboot:
-      #reboot_command: systemctl reboot --now
-      msg: "Rebooting machine in 5 seconds"
-    #when: reboot_server|bool
+#  - name: Reboot server
+#   tags:
+#   - maintenance
+#   become: true
+#   ansible.builtin.reboot:
+#     #reboot_command: systemctl reboot --now
+#     msg: "Rebooting machine in 5 seconds"
+#   #when: reboot_server|bool
   - name: Install a required packages
     tags:
     - setup
