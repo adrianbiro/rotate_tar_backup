@@ -1,11 +1,11 @@
 # How to use
 
 ```bash
-# run all
-ansible-playbook playbook.yaml -i hosts 
+# run all, append --check for dry run
+ansible-playbook playbook.ansible.yaml -i hosts 
 # rotate ssh key
-ansible-playbook playbook.yaml -i hosts --tags=ssh
+ansible-playbook playbook.ansible.yaml -i hosts.ini --tags=ssh
 # init new git repo
-ansible-playbook playbook.yaml -i hosts --tags=init_git --extra-vars='repo_name=test1'
+ansible-playbook playbook.ansible.yaml -i hosts.ini --tags=init_git --extra-vars='repo_name=test1'
 
 ```

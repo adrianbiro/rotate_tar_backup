@@ -1,0 +1,147 @@
+---
+- name: git server setup and administation
+  hosts: git
+  become: true
+  vars:
+    gits_location: /srv/gits
+    backups_location: /srv/backups
+    git_user: git
+    git_group: git
+    reboot_server: false
+
+
+  tasks:
+  - name: Update all packages to their latest version
+    tags:
+    - setup
+    - maintenance
+    ansible.builtin.apt:
+      name: "*"
+      state: latest
+      cache_valid_time: 3600
+  - name: Upgrade the OS (apt-get dist-upgrade)
+    tags:
+    - setup
+    - maintenance
+    ansible.builtin.apt:
+      upgrade: dist
+      cache_valid_time: 3600
+  - name: Reboot server
+    tags:
+    - maintenance
+    become: true
+    ansible.builtin.reboot:
+      #reboot_command: systemctl reboot --now
+      msg: "Rebooting machine in 5 seconds"
+    #when: reboot_server|bool
+  - name: Install a required packages
+    tags:
+    - setup
+    ansible.builtin.apt:
+      pkg:
+      - git
+      - fail2ban
+      - htop
+      - vim
+      state: present
+      cache_valid_time: 3600
+    notify:
+    - start fail2ban
+  - name: Create user
+    tags:
+    - setup
+    user:
+      name: git
+      shell: /usr/bin/git-shell
+      home: /home/git
+  - name: Upload ssh key
+    tags:
+    - ssh
+    - setup
+    file:
+      path: "/home/git/.ssh"
+      state: directory
+      owner: "{{ git_user }}"
+      group: "{{ git_group }}"
+      mode: '0700'
+    notify:
+    - upload key for git user
+  - name: Create directories for git server
+    tags:
+    - setup
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: "{{ git_user}}"
+      group: "{{ git_group }}"
+      mode: '0775'
+    loop:
+    - "{{ gits_location }}"
+    - "{{ backups_location }}"
+  - name: Setup backup o gits
+    tags:
+    - setup
+    - setup_backup
+    command: /usr/bin/true
+    notify:
+    - install timer and service
+    - enable timer and service
+  - name: Init git repo
+    tags: init_git
+    command: /usr/bin/true
+    notify:
+    - create git repo dir
+    - init bare git repo
+    - fix git repo ownership
+    when: repo_name is defined and repo_name  != '' and repo_name != None
+  #### Handlers
+  handlers:
+  - name: upload key for git user
+    ansible.builtin.copy:
+      src: ./files/home_git_ssh/authorized_keys
+      dest: /home/git/.ssh/authorized_keys
+      owner: git
+      group: git
+      mode: '0600'
+      msg: "upload key for git user"
+  - name: create git repo dir
+    file:
+      path: "{{ gits_location }}/{{ repo_name }}"
+      state: directory
+      owner: git
+      group: git
+      mode: '0775'
+  - name: init bare git repo
+    command: git init --bare "{{ gits_location }}/{{ repo_name }}"
+  - name: fix git repo ownership
+    file:
+      dest: "{{ gits_location }}/{{ repo_name }}"
+      owner: "{{ git_user}}"
+      group: "{{ git_group }}"
+      mode: "0775"
+      recurse: true
+  - name: start fail2ban
+    ansible.builtin.service:
+      name: fail2ban
+      state: started
+      enabled: yes
+  - name: install timer and service
+    ansible.builtin.copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      owner: root
+      group: root
+      mode: "{{ item.mode }}"
+    with_items:
+    - { src: '../gitsBackup.service', dest: '/etc/systemd/system/gitsBackup.service', mode: '0644' }
+    - { src: '../gitsBackup.timer', dest: '/etc/systemd/system/gitsBackup.timer', mode: '0644' }
+    - { src: '../backup.sh', dest: '/usr/local/bin/backup.sh', mode: '0755' }
+  - name: enable timer and service
+    ansible.builtin.service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+      daemon_reload: true
+    with_items:
+    - gitsBackup.service
+    - gitsBackup.timer

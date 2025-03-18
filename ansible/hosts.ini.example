@@ -1,0 +1,3 @@
+#https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html#inventory-basics-formats-hosts-and-groups
+#https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html
+git ansible_host=<IP or FQDN> ansible_user=azureuser ansible_port=22 ansible_ssh_private_key_file=<path/to/key>

@@ -6,9 +6,9 @@ Wants=gitsBackup.timer
 Type=oneshot
 ReadOnlyPaths=/
 ReadWritePaths=/srv/backups
-NoExecPaths=/
-ExecPaths=/srv/gits/rotate_tar_backup /usr/bin
-ExecStart=/srv/gits/rotate_tar_backup/backup.sh
+#NoExecPaths=/
+ExecPaths=/usr/local/bin /usr/bin
+ExecStart=/usr/local/bin/backup.sh
 
 [Install]
 WantedBy=multi-user.target

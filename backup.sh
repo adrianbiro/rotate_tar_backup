@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=CS2010
-SRC_DIR="gits"
-BACKUP_DIR="backups"
+SRC_DIR="/srv/gits"
+BACKUP_DIR="/srv/backups"
 PROJECT_NAME="gits"
 
 BACKUP_RETENTION_HOURLY=12
@@ -78,3 +78,4 @@ function rotate_backups() {
 
 backup
 rotate_backups
+exit 0

@@ -27,6 +27,8 @@ BACKUP_RETENTION_MONTHLY=3
 BACKUP_RETENTION_YEARLY=0
 ```
 
+Or use ansible playbook
+
 Set to propper path `#!/usr/bin/env python3`
 
 Ensure that backup paths exists

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-
-"""
+""" """
 import json
 import subprocess
 import sys
@@ -113,7 +111,8 @@ def main():
     backup = Backup(config_file="config.json")
     backup.create_backups()
     backup.rotate_backups()
-    sys.exit(0)
+
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
+    sys.exit(0)
