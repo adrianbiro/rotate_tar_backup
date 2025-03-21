@@ -1,5 +1,5 @@
 [Unit]
-Description=Backup /srv/gits daily but run on hourly
+Description=Backup /srv/gits hourly 
 Requires=gitsBackup.service
 
 [Timer]
