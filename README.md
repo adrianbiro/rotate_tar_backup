@@ -4,11 +4,7 @@ Rotate tar or rsync backup: daily, weekly, monthly, yearly, and hourly.
 
 It is written for unix like systems with tar, and rsync installed.
 
-## Systemd links
 
-* <https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html#>
-* <https://documentation.suse.com/smart/systems-management/html/systemd-working-with-timers/index.html>
-* <https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html>
 
 ## Deployemnt
 
@@ -29,15 +25,24 @@ BACKUP_RETENTION_MONTHLY=3
 BACKUP_RETENTION_YEARLY=0
 ```
 
-Or use ansible playbook
+* Set to propper path to interpreter `#!/usr/bin/env python3`
 
-Set to propper path `#!/usr/bin/env python3`
+* Ensure that backup paths exists before you enable backup.
 
-Ensure that backup paths exists before you enable backup.
+* Adjut unit files and ansible playbooks, it is intended for git server setup.
 
 ```bash
 mkdir -p /srv/{gits,backups}
 ```
+
+Use ansible playbook
+
+## Systemd links
+
+* <https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html#>
+* <https://documentation.suse.com/smart/systems-management/html/systemd-working-with-timers/index.html>
+* <https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html>
+
 
 ### Systemd debugging
 
@@ -74,4 +79,4 @@ gits-yearly-2025:01:01.tar.gz  # doubles as monthly
 
 ---
 
-Inspiration from forked gist <https://gist.github.com/adrianbiro/22fa0362fe1a510eb00fe11dced759d4>
+Inspiration for rotation from forked gist <https://gist.github.com/adrianbiro/22fa0362fe1a510eb00fe11dced759d4>
