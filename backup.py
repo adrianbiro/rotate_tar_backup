@@ -9,6 +9,7 @@ from datetime import datetime
 from json import JSONDecodeError
 from pathlib import Path
 from subprocess import CalledProcessError
+from typing import Union
 
 
 class Config:
@@ -74,7 +75,7 @@ class Config:
         # fmt: on
         return "daily"  # less then 7
 
-    def bkp_location(self, rate: str | None = None, hours: bool = False) -> str:
+    def bkp_location(self, rate: Union[str, None] = None, hours: bool = False) -> str:
         time_format = "%Y:%m:%d"
         if hours:
             time_format = "%Y:%m:%d-%H:%M:%S"
