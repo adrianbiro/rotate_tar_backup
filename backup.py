@@ -73,9 +73,14 @@ class Config:
         if (datetime.now().timetuple().tm_wday + 1) == 7 and self.backup_retention_weekly > 0:
             return "weekly"
         # fmt: on
-        return "daily"  # less then 7
+        return "daily"  # less then 7, will return even if disabled, handle with is_daly_rate_enabled
+
+    def is_daily_rate_enabled(self) -> bool:
+        """_rate will default to daily, this will ensure that daly backup is not runned if not explicitelly enabled"""
+        return self.backup_retention_daily > 0
 
     def bkp_location(self, rate: Union[str, None] = None, hours: bool = False) -> str:
+        """Union[str, None] for pre python3.10 compability, 'str | None'"""
         time_format = "%Y:%m:%d"
         if hours:
             time_format = "%Y:%m:%d-%H:%M:%S"
@@ -98,6 +103,7 @@ class Backup:
         Skip backup (relevant for tar.gz) creation and compresion if eg. daily backup was created in less then 6 minutes (360 sec).
         Just cp previous one, to avoid unnecesery load.
         """
+        backup_created = False
         logging.info("Creating:")
 
         def _backup(bkp_location: str) -> None:
@@ -111,9 +117,7 @@ class Backup:
                     bkp_location,
                 ],
             }
-            if not shutil.which(
-                executable := bkp_methods[self.config.backup_type][0]
-            ):
+            if not shutil.which(executable := bkp_methods[self.config.backup_type][0]):
                 logging.error("Command not found: %s", executable)
                 sys.exit(1)
             try:
@@ -124,23 +128,33 @@ class Backup:
                     text=True,
                     check=True,
                 )
-                logging.debug("%s",f"{executable=} {result.stdout=}")
+                logging.debug("%s", f"{executable=} {result.stdout=}")
             except CalledProcessError as e:
                 logging.error(e)
                 sys.exit(1)
+            nonlocal backup_created
+            backup_created = True
 
-        if not Path(self.config.bkp_location()).exists():
+        _bkp_location = Path(self.config.bkp_location())
+        if not _bkp_location.exists() and self.config.is_daily_rate_enabled():
             _backup(self.config.bkp_location())
+        elif self.config.is_daily_rate_enabled():
+            logging.info("\tSkipping: %s, alredy exists.", self.config.bkp_location())
+        # hourly backup section
         if self.config.backup_retention_hourly > 0:
             _bkp_file_hourly = self.config.bkp_location(hours=True, rate="hourly")
             # fmt: off
-            if (datetime.now().timestamp() - Path(self.config.bkp_location()).stat().st_ctime) < 360:
+            if (_bkp_location.exists() and datetime.now().timestamp() - _bkp_location.stat().st_ctime) < 360:
                 # fmt: on
-                _src = Path(self.config.bkp_location())
-                _dest = Path(_bkp_file_hourly)
-                _dest.write_bytes(_src.read_bytes())
+                if _bkp_location.is_dir():
+                    shutil.copytree(src=self.config.bkp_location(), dst=_bkp_file_hourly)
+                if _bkp_location.is_file():
+                    shutil.copy(src=self.config.bkp_location(), dst=_bkp_file_hourly)
+                
             if not Path(_bkp_file_hourly).exists():
                 _backup(_bkp_file_hourly)
+        if not backup_created:
+            logging.info("\tSkipping backup creation, no aplicable backup rate enabled at this moment.")
 
     def rotate_backups(self):
         logging.info("Rotating (deleting) old backups:")
@@ -167,6 +181,8 @@ class Backup:
                 ob.unlink()
             except IsADirectoryError:
                 shutil.rmtree(ob)
+        if not old_backups:
+            logging.info("\tNo old backups qualified for rotation found.")
 
 
 def main():
