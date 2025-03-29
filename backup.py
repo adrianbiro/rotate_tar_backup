@@ -8,6 +8,7 @@ import sys
 from datetime import datetime
 from json import JSONDecodeError
 from pathlib import Path
+from subprocess import CalledProcessError
 
 
 class Config:
@@ -109,8 +110,23 @@ class Backup:
                     bkp_location,
                 ],
             }
-            logging.info("\t%s", " ".join(bkp_methods[self.config.backup_type]))
-            subprocess.call(bkp_methods[self.config.backup_type])
+            if not shutil.which(
+                executable := bkp_methods[self.config.backup_type][0]
+            ):
+                logging.error("Command not found: %s", executable)
+                sys.exit(1)
+            try:
+                logging.info("\t%s", " ".join(bkp_methods[self.config.backup_type]))
+                result = subprocess.run(
+                    bkp_methods[self.config.backup_type],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                logging.debug("%s",f"{executable=} {result.stdout=}")
+            except CalledProcessError as e:
+                logging.error(e)
+                sys.exit(1)
 
         if not Path(self.config.bkp_location()).exists():
             _backup(self.config.bkp_location())
