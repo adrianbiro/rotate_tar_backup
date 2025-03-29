@@ -1,8 +1,8 @@
-# rotate_tar_backup
+# rotate_tar_or_rsync_backup
 
-Rotate tar backup: daily, weekly, monthly, yearly, and hourly.
+Rotate tar or rsync backup: daily, weekly, monthly, yearly, and hourly.
 
-It is for unix like systems with tar installed.
+It is written for unix like systems with tar, and rsync installed.
 
 ## Systemd links
 
@@ -15,6 +15,8 @@ It is for unix like systems with tar installed.
 ### Script configuration
 
 Change configuration variables in bash version script or `config.json` for python version.
+
+#### bash version supports just tar
 
 ```bash
 SRC_DIR="/srv/gits"
@@ -31,13 +33,13 @@ Or use ansible playbook
 
 Set to propper path `#!/usr/bin/env python3`
 
-Ensure that backup paths exists
+Ensure that backup paths exists before you enable backup.
 
 ```bash
 mkdir -p /srv/{gits,backups}
 ```
 
-### Systemd
+### Systemd debugging
 
 ```bash
 systemd-analyze verify gitsBackup.*

@@ -1,10 +1,21 @@
 {
+    "_COMMENT_SRC_DIR_BACKUP_DIR": "both has to exist before enabling backup",
     "SRC_DIR": "gits",
     "BACKUP_DIR": "backups",
+    "_COMMENT_PROJECT_NAME": "use for lableling backups",
     "PROJECT_NAME": "gits",
+    "_COMMENT_RETENTION_PERIODS": "set retention higher then 0 to enable it",
     "BACKUP_RETENTION_HOURLY": 12,
     "BACKUP_RETENTION_DAILY": 6,
     "BACKUP_RETENTION_WEEKLY": 3,
     "BACKUP_RETENTION_MONTHLY": 3,
-    "BACKUP_RETENTION_YEARLY": 0
+    "BACKUP_RETENTION_YEARLY": 0,
+    "_COMMENT_BACKUP_TYPE": "only one can by set to true",
+    "BACKUP_TYPE_TAR": true,
+    "BACKUP_TYPE_RSYNC": false,
+    "_COMMENT_CMD":"Command as argument lists, do not put SRC_DIR ot BACKUP_DIR here, you can adjust compression or ssh arhs for rsync here",
+    "TAR_CMD":["tar", "--create","--gzip", "--file"],
+    "RSYNC_CMD": ["rsync", "--recursive", "--archive", "--copy-links"],
+    "_COMMENT_BACKUP_LOCATION_EXTENSION": "set to '.tar.gz' if you want to use tar backup type. Set to '/' or '' for rsync",
+    "BACKUP_LOCATION_EXTENSION": ".tar.gz"
 }
