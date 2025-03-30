@@ -131,7 +131,7 @@ class Backup:
                 logging.debug("%s", f"{executable=} {result.stdout=}")
             except CalledProcessError as e:
                 logging.error(e)
-                sys.exit(1)
+                sys.exit(e.returncode)
             nonlocal backup_created
             backup_created = True
 
