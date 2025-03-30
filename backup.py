@@ -67,13 +67,13 @@ class Config:
     def _rate(self) -> str:
         # fmt: off
         if datetime.now().timetuple().tm_yday == 1 and self.backup_retention_yearly > 0:
-            return "yearly"
+            return "yearly" # at 01.01.2025
         if datetime.now().timetuple().tm_mday == 1 and self.backup_retention_monthly > 0:
-            return "monthly"
+            return "monthly" # at 01.01.2025, 01.02.2025, ...
         if (datetime.now().timetuple().tm_wday + 1) == 7 and self.backup_retention_weekly > 0:
-            return "weekly"
+            return "weekly" # at sunday
         # fmt: on
-        return "daily"  # less then 7, will return even if disabled, handle with is_daly_rate_enabled
+        return "daily"  # every day if other are disabled, mon-sat if weekly enabled, etc. daily will return even if disabled, handled with is_daly_rate_enabled
 
     def is_daily_rate_enabled(self) -> bool:
         """_rate will default to daily, this will ensure that daly backup is not runned if not explicitelly enabled"""
@@ -154,7 +154,9 @@ class Backup:
             if not Path(_bkp_file_hourly).exists():
                 _backup(_bkp_file_hourly)
         if not backup_created:
-            logging.info("\tSkipping backup creation, no aplicable backup rate enabled at this moment.")
+            logging.info(
+                "\tSkipping backup creation, no aplicable backup rate enabled at this moment."
+            )
 
     def rotate_backups(self):
         logging.info("Rotating (deleting) old backups:")
@@ -183,6 +185,14 @@ class Backup:
                 shutil.rmtree(ob)
         if not old_backups:
             logging.info("\tNo old backups qualified for rotation found.")
+            logging.info(
+                "\tEnabled rates:\t%s",
+                {
+                    k.upper(): v
+                    for k, v in self.config.__dict__.items()
+                    if k.startswith("backup_retention_")
+                },
+            )
 
 
 def main():
